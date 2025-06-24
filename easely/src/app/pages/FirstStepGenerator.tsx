@@ -258,7 +258,7 @@ export default function FirstStepGenerator() {
       {!step && (
         <div className="fixed bottom-6 left-1/2 transform -translate-x-1/2">
           <button
-            onClick={() => router.push("/progress")}
+            onClick={() => router.push("/big-task")}
             className="text-white px-4 py-2 rounded hover:underline font-serif"
           >
             Need Help Breaking Down a Big Task?
