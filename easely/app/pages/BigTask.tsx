@@ -3,7 +3,7 @@ import { useState, useEffect } from "react";
 import Confetti from "react-confetti";
 import { useWindowSize } from "@react-hook/window-size";
 import { useRouter } from "next/navigation";
-import { useBigTaskProgress } from "./../hooks/useBigTaskProgress";
+import { useBigTaskProgress } from "../hooks/useBigTaskProgress";
 
 const moods = ["Low Energy", "Stressed", "Focused"] as const;
 type Mood = (typeof moods)[number];
