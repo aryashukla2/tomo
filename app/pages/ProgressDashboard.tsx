@@ -9,13 +9,13 @@ export default function ProgressDashboard() {
   const recentTasks = getRecentTasks(5);
   const [completingIndex, setCompletingIndex] = useState<number | null>(null);
 
-  const handleCompleteTask = (index: number) => {
+  const handleCompleteTask = async (index: number) => {
     // Start completion animation
     setCompletingIndex(index);
 
     // After animation, actually complete the task
-    setTimeout(() => {
-      completeTask(index); // Remove the task from history
+    setTimeout(async () => {
+      await completeTask(index); // Remove the task from history
       setCompletingIndex(null);
     }, 500); // Match this with CSS transition duration
   };

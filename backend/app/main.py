@@ -3,6 +3,7 @@ from sqlalchemy.orm import Session
 from . import crud, models, schemas, database
 from contextlib import asynccontextmanager
 from datetime import date, timedelta
+from fastapi.middleware.cors import CORSMiddleware
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -23,6 +24,14 @@ async def lifespan(app: FastAPI):
     yield  # Run the app
 
 app = FastAPI(lifespan=lifespan)
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["http://localhost:3000"],  # your frontend port
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 def get_db():
     db = database.SessionLocal()
