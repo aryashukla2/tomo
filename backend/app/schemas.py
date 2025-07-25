@@ -14,6 +14,8 @@ class Chunk(ChunkBase):
 
 class TaskBase(BaseModel):
     title: str
+    step: Optional[str] = None
+    mood: Optional[str] = None
     is_chunked: Optional[bool] = False
     is_archived: Optional[bool] = False
 

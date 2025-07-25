@@ -7,6 +7,8 @@ class Task(Base):
     __tablename__ = "tasks"
     id = Column(Integer, primary_key=True, index=True)
     title = Column(String, index=True)
+    step = Column(String, nullable=True)
+    mood = Column(String, nullable=True)
     is_chunked = Column(Boolean, default=False)
     is_archived = Column(Boolean, default=False)
     chunks = relationship("Chunk", back_populates="task")
