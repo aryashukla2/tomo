@@ -157,4 +157,14 @@ def get_user_stats(db: Session = Depends(get_db)):
 
 @app.get("/focus-sessions/", response_model=list[schemas.FocusSession])
 def get_focus_sessions(db: Session = Depends(get_db)):
-    return db.query(models.FocusSession).order_by(models.FocusSession.timestamp.desc()).all()
+    return db.query(models.FocusSession).order_by(models.FocusSession.created_at.desc()).all()
+
+@app.delete("/tasks/{task_id}/")
+def delete_task(task_id :int, db: Session = Depends(get_db)):
+    task = db.query(models.Task).filter(models.Task.id == task_id).first()
+    if not task:
+        raise HTTPException(status_code=404, detail="Task not found")
+    
+    db.delete(task)
+    db.commit()
+    return {"message": "Task deleted successfully"}

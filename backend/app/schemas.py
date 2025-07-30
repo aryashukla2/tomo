@@ -23,6 +23,7 @@ class TaskCreate(TaskBase): pass
 class Task(TaskBase):
     id: int
     chunks: List[Chunk] = []
+    created_at: Optional[datetime]
     class Config:
         from_attributes = True
 
@@ -38,6 +39,6 @@ class FocusSessionCreate(FocusSessionBase):
 
 class FocusSession(FocusSessionBase):
     id: int
-    timestamp: datetime
+    created_at: Optional[datetime]
     class Config:
         from_attributes = True

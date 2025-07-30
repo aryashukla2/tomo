@@ -8,59 +8,70 @@ export default function ProgressDashboard() {
   const { progress, setProgress } = useProgress();
   const xpPercent = Math.floor((progress.xp / 50) * 100);
   const recentTasks = progress.history.slice(0, 5);
-  const [completingIndex, setCompletingIndex] = useState<number | null>(null);
+  const [completingTaskId, setCompletingTaskId] = useState<number | null>(null);
 
-  const handleCompleteTask = async (index: number) => {
-    const taskToComplete = recentTasks[index];
-    if (!taskToComplete) return;
+  const handleCompleteTask = async (task: Task) => {
+    setCompletingTaskId(task.id);
 
-    setCompletingIndex(index);
+    setTimeout(async () => {
+      try {
+        console.log("✅ Completing task:", task);
 
-    try {
-      // Log the focus session (XP and mood)
-      await fetch("http://localhost:8000/focus-sessions/", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          task_title: taskToComplete.task,
-          chunk_title: taskToComplete.step,
-          duration: 5,
-          xp_earned: 10,
-          mood: taskToComplete.mood,
-        }),
-      });
+        // 1. Log completed session
+        const focusSessionRes = await fetch(
+          "http://localhost:8000/focus-sessions/",
+          {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              task_title: task.title,
+              chunk_title: task.step,
+              duration: 5,
+              xp_earned: 10,
+              mood: task.mood,
+            }),
+          }
+        );
 
-      // Refresh progress from backend
-      const statsRes = await fetch("http://localhost:8000/stats");
-      const stats = await statsRes.json();
+        if (!focusSessionRes.ok) {
+          const errText = await focusSessionRes.text();
+          throw new Error(`Focus session failed: ${errText}`);
+        }
 
-      const sessionsRes = await fetch("http://localhost:8000/focus-sessions");
-      const sessions = await sessionsRes.json();
+        // 2. Delete the original task
+        await fetch(`http://localhost:8000/tasks/${task.id}`, {
+          method: "DELETE",
+        });
 
-      setProgress({
-        xp: stats.total_xp % 50,
-        level: stats.current_level,
-        streak: stats.current_streak,
-        lastDate: stats.last_active_date || null,
-        history: sessions.map(
-          (s: {
-            task_title: string;
-            chunk_title?: string;
-            mood: string;
-            timestamp: string;
-          }) => ({
-            task: s.task_title,
-            step: s.chunk_title || "N/A",
-            mood: s.mood,
-            date: new Date(s.timestamp).toLocaleString(),
-          })
-        ),
-      });
-    } catch (err) {
-      console.error("Failed to complete task:", err);
-    }
+        // 3. Refresh tasks and stats
+        const [statsRes, tasksRes] = await Promise.all([
+          fetch("http://localhost:8000/stats"),
+          fetch("http://localhost:8000/tasks"),
+        ]);
 
-    setTimeout(() => setCompletingIndex(null), 500);
+        const stats = await statsRes.json();
+        const updatedTasks = await tasksRes.json();
+
+        // 4. Update progress state
+        setProgress({
+          xp: stats.total_xp % 50,
+          level: stats.current_level,
+          streak: stats.current_streak,
+          lastDate: stats.last_active_date || null,
+          history: updatedTasks.map((t: Task) => ({
+            id: t.id,
+            title: t.title,
+            step: t.step,
+            mood: t.mood,
+            date: new Date(t.created_at).toLocaleString(),
+          })),
+        });
+      } catch (err) {
+        console.error("❌ Failed to complete task:", err);
+      }
+
+      setCompletingTaskId(null);
+    }, 500);
   };
 
   return (
@@ -88,36 +99,36 @@ export default function ProgressDashboard() {
         {/* Task History */}
         <h2 className="mt-10 text-2xl font-semibold">Recent Tasks</h2>
         <ul className="mt-4 space-y-3">
-          {recentTasks.map((item: Task, i: number) => (
+          {recentTasks.map((item: Task) => (
             <li
-              key={`${i}-${item.date}`} // Better key to avoid React issues
+              key={`${item.id}-${item.created_at}`} // Better key to avoid React issues
               className={`rounded p-3 transition-all duration-500 ${
-                completingIndex === i
+                completingTaskId === item.id
                   ? "bg-green-600/50 scale-95 opacity-50 transform translate-x-4"
                   : "bg-slate-800"
               }`}
             >
               <p>
-                <strong>Task:</strong> {item.task}
+                <strong>Task:</strong> {item.title}
               </p>
               <p>
                 <strong>Step:</strong> {item.step}
               </p>
               <p className="text-sm text-gray-400">
-                {item.date} • {item.mood}
+                {item.created_at}• {item.mood}
               </p>
 
               {/* Task Completion Button */}
               <button
-                onClick={() => handleCompleteTask(i)}
-                disabled={completingIndex === i}
+                onClick={() => handleCompleteTask(item)}
+                disabled={completingTaskId === item.id}
                 className={`mt-2 px-3 py-1 text-sm rounded text-white transition-colors ${
-                  completingIndex === i
+                  completingTaskId === item.id
                     ? "bg-green-600/60 cursor-not-allowed"
                     : "bg-green-500/40 hover:bg-green-500/20"
                 }`}
               >
-                {completingIndex === i
+                {completingTaskId === item.id
                   ? "🎉 Completing..."
                   : "✅ Complete Task (+10 XP)"}
               </button>

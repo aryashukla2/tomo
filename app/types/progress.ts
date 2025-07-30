@@ -1,11 +1,11 @@
 export type Mood = "Low Energy" | "Stressed" | "Focused";
 
 export interface Task {
-    task: string;
+    title: string;
     step: string;
     mood: Mood;
-    date: string;
-    time?: string;
+    created_at: string;
+    id: number;
   }
   
   export interface Progress {

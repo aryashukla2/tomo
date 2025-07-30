@@ -1,4 +1,4 @@
-from sqlalchemy import Column, DateTime, Integer, String, Boolean, ForeignKey, Date
+from sqlalchemy import Column, DateTime, Integer, String, Boolean, ForeignKey, Date, func
 from sqlalchemy.orm import relationship
 from .database import Base
 from datetime import datetime, timezone, date
@@ -6,12 +6,13 @@ from datetime import datetime, timezone, date
 class Task(Base):
     __tablename__ = "tasks"
     id = Column(Integer, primary_key=True, index=True)
-    title = Column(String, index=True)
+    title = Column(String, index=False)
     step = Column(String, nullable=True)
     mood = Column(String, nullable=True)
     is_chunked = Column(Boolean, default=False)
     is_archived = Column(Boolean, default=False)
     chunks = relationship("Chunk", back_populates="task")
+    created_at = Column(DateTime, default=func.now())
 
 class Chunk(Base):
     __tablename__ = "chunks"
@@ -30,7 +31,7 @@ class FocusSession(Base):
     duration = Column(Integer, nullable=False)         # Duration in minutes
     xp_earned = Column(Integer, nullable=False, default=0)
     mood = Column(String, nullable=True)               # e.g., "tired", "focused", etc.
-    timestamp = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
+    created_at = Column(DateTime, default=func.now())
 
 class UserStats(Base):
     __tablename__ = "user_stats"
